@@ -36,6 +36,18 @@
 			"revision": "7fcbc72f853b92b5720db4a6b8482be612daef24"
 		},
 		{
+			"checksumSHA1": "jbHn76QyqFaipgK1q38s51gPoWA=",
+			"path": "github.com/russross/blackfriday",
+			"revision": "35eb537633d9950afc8ae7bdf0edb6134584e9fc",
+			"revisionTime": "2016-09-09T06:28:54Z"
+		},
+		{
+			"checksumSHA1": "WPrjq5b6bM1jaOo0yx5+ErFdG0I=",
+			"path": "github.com/shurcooL/sanitized_anchor_name",
+			"revision": "1dba4b3954bc059efc3991ec364f9f9a35f597d2",
+			"revisionTime": "2016-09-18T04:11:01Z"
+		},
+		{
 			"checksumSHA1": "hKZGpbFuCrkE4s1vxubKK1aFlfI=",
 			"path": "golang.org/x/net/context",
 			"revision": "d9558e5c97f85372afee28cf2b6059d7d3818919"
