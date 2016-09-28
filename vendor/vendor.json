@@ -3,6 +3,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "tA42OdBlhb5vAp9V4pkOP1N8Jow=",
+			"path": "github.com/PuerkitoBio/fetchbot",
+			"revision": "259e93bccc058eb7cecbf2eca5f7703c8987c05f",
+			"revisionTime": "2015-11-05T17:12:04Z"
+		},
+		{
 			"checksumSHA1": "wk2TqKaeEMD22S8HS1tn7ynC1Ho=",
 			"path": "github.com/PuerkitoBio/gocrawl",
 			"revision": "8368ebcaef6983b3c23089429b7f996b77674622",
@@ -76,6 +82,12 @@
 			"path": "github.com/shurcooL/sanitized_anchor_name",
 			"revision": "1dba4b3954bc059efc3991ec364f9f9a35f597d2",
 			"revisionTime": "2016-09-18T04:11:01Z"
+		},
+		{
+			"checksumSHA1": "SG7K38/XSIBkDpnl8jCq1dR7Fgk=",
+			"path": "github.com/temoto/robotstxt-go",
+			"revision": "99f6b48954d8cafb2f10790957aa747ca7aeb530",
+			"revisionTime": "2016-06-01T08:08:07Z"
 		},
 		{
 			"checksumSHA1": "2k80CLSSZiVUbZ3viw+MQgAmhI4=",
