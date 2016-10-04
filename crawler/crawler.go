@@ -1,11 +1,8 @@
 package crawler
 
 import (
-	"log"
-	"net/http"
 	"os"
 	"fmt"
-	"github.com/gin-gonic/gin"
     "gopkg.in/mgo.v2"
 	"github.com/PuerkitoBio/goquery"
 	"strconv"
@@ -18,6 +15,7 @@ type PcItem struct {
 	Link        string
 	Price       int
 	Guarantee   string
+	ShortDesc 	string
 	Desc 		string
 	Origin		string
 	Available	string
@@ -239,7 +237,73 @@ func ScrapeGamebank(res []PcItem) ([]PcItem, error) {
 	return res, nil
 }
 
-func insertMlab(items []PcItem ) {
+func ScrapeAZ(res []PcItem) ([]PcItem, error) {
+	ROOT_URL := "http://www.azaudio.vn"
+	productsLink := []string{}
+
+	//category, may need to update in future
+	categoryLinks := []string{"http://www.azaudio.vn/audio", "http://www.azaudio.vn/gaming-gear", "http://www.azaudio.vn/loa", "http://www.azaudio.vn/may-tinh"}
+	for i := 0; i < len(categoryLinks); i++ {
+		catPage, err2 := goquery.NewDocument(categoryLinks[i])
+		if err2 != nil {
+			return nil, err2
+		}
+		for true {
+			catPage.Find(".item-prd a.center-block").Each(func (i int, s *goquery.Selection) {
+				productLink, err := s.Attr("href")
+				if (err && productLink !="") {
+					productsLink = append(productsLink, productLink)
+				}
+			})
+
+			nextPage,err := catPage.Find("a.ajaxpagerlink").Attr("href")
+			if (err && nextPage !="") {
+				nextPage = ROOT_URL + nextPage
+				catPage, err2 = goquery.NewDocument(nextPage)
+				fmt.Printf("link page", nextPage)
+				if err2 != nil {
+					return nil, err2
+				}
+			}	else {
+				break;
+			}
+		}
+	}
+
+	//have productsLink contains all the products
+	for i := 0; i < len(productsLink); i++ {
+		doc, err := goquery.NewDocument(productsLink[i])
+		if (err == nil) {
+			images := []string{}
+			category:= doc.Find("a.itemcrumb.active > span").Text()
+			shortDesc := doc.Find(".briefContent p").Text()
+			title:= doc.Find("div.prd-content h1").Text()
+			desc:= doc.Find(".contentFull").Text()
+			origin:= doc.Find(".prd-content .brands a").Text()
+			guarantee:= doc.Find(".prd-content div.guarantee").Text()
+			doc.Find(".prd-detail img").Each(func(i int, s *goquery.Selection) {
+		        src, exists := s.Attr("src")
+		        if exists {
+		        	images = append(images, ROOT_URL + src)
+		        }
+			})
+			priceString := doc.Find("span.new-price").Text()
+			priceString = strings.Replace(priceString, ".", "", -1)	
+			priceString = strings.Replace(priceString, "₫", "", -1)	
+			priceString = strings.Replace(priceString, " ", "", -1)	
+			price, err2 := strconv.Atoi(priceString)
+			if err2 != nil {
+				price = 0
+			}
+			item := PcItem{Title: title, ShortDesc: shortDesc, Link:productsLink[i],Price: price, Vendor: "azaudio", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
+			res = append(res, item)
+			fmt.Println("azaudio reading %#v / %#v", i, len(productsLink))
+		}
+	}
+	return res, nil
+}
+
+func InsertMlab(items []PcItem ) {
         uri := os.Getenv("MONGODB_URI")
         if uri == "" {
                 fmt.Println("no connection string provided")
@@ -294,6 +358,12 @@ func main() {
 		fmt.Println(err, pcItems)
 	}
 	fmt.Printf("length of pcitems 3: %v", len(pcItems))
+	
+	pcItems, err = ScrapeAZ(pcItems)
+	if err != nil {
+		fmt.Println(err, pcItems)
+	}
+	fmt.Printf("length of pcitems 4: %v", len(pcItems))
 
-	insertMlab(pcItems)
+	InsertMlab(pcItems)
 }
