@@ -4,11 +4,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/heroku/go-getting-started/crawler"
+    "github.com/gin-gonic/gin"
+    "github.com/pcchecker/api"
 )
-var pcItems = []crawler.PcItem{}
+
 
 func main() {
 	port := os.Getenv("PORT")
@@ -25,20 +24,15 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
-	router.Run(":" + port)
 
-
-	router.GET("/queryAll", func(c *gin.Context) {
-		pcItems, err:= crawler.GetMLab()
-		fmt.Printf("length of pcitems 1: %v", pcItems)
-
-		if err != nil {
-			fmt.Println(err, pcItems)
+	router.GET("/getAllDocs", func(c *gin.Context) {
+	    result, err := api.GetAllDocs()
+		if(err==nil) {
+			c.JSON(200, result)
+		}	else {
+			c.JSON(400, err)
 		}
-		c.JSON(200, pcItems)
-
 	})
-
-
+	router.Run(":" + port)
 
 }

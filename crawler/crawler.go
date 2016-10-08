@@ -1,30 +1,14 @@
 package crawler
 
 import (
-	"os"
 	"fmt"
-    "gopkg.in/mgo.v2/bson"	
-    "gopkg.in/mgo.v2"
 	"github.com/PuerkitoBio/goquery"
 	"strconv"
 	"strings"
+	. "github.com/pcchecker/model"	
 )
 
-
-type PcItem struct {
-	Title       string
-	Link        string
-	Price       int
-	Guarantee   string
-	ShortDesc 	string
-	Desc 		string
-	Origin		string
-	Available	string
-	Status 		string
-	Category	string
-	Image 		[]string
-	Vendor		string
-}
+// type PcItem -> PcItemModel.PcItem
 
 func ScrapeTanDoanh (res []PcItem) ([]PcItem, error) {
 	ROOT_URL := "http://tandoanh.vn"
@@ -302,91 +286,4 @@ func ScrapeAZ(res []PcItem) ([]PcItem, error) {
 		}
 	}
 	return res, nil
-}
-func GetMLab() ([]PcItem, error) {
-        uri := os.Getenv("MONGODB_URI")
-        if uri == "" {
-                fmt.Println("no connection string provided")
-                os.Exit(1)
-        }
- 
-        sess, err := mgo.Dial(uri)
-        if err != nil {
-                fmt.Printf("Can't connect to mongo, go error %v\n", err)
-                os.Exit(1)
-        }
-        defer sess.Close()
-        sess.SetSafe(&mgo.Safe{})
-        collection := sess.DB("heroku_tr3z0r48").C("godata")
-
-        var results []PcItem
-		err = collection.Find(bson.M{"category": "HDD / SSD"}).Sort("-timestamp").All(&results)
-		if err != nil {
-			panic(err)
-		}
-		return results, err
-}
-func InsertMlab(items []PcItem ) {
-        uri := os.Getenv("MONGODB_URI")
-        if uri == "" {
-                fmt.Println("no connection string provided")
-                os.Exit(1)
-        }
- 
-        sess, err := mgo.Dial(uri)
-        if err != nil {
-                fmt.Printf("Can't connect to mongo, go error %v\n", err)
-                os.Exit(1)
-        }
-        defer sess.Close()
-        sess.SetSafe(&mgo.Safe{})
-        collection := sess.DB("heroku_tr3z0r48").C("godata")
-        //remove all before insert
-        collection.RemoveAll(nil)
-
-        //prepare bulk insert
-        docs := make([]interface{}, len(items))
-		for i := 0; i < len(items); i++ {
-			docs[i] = items[i]
-		}
-		fmt.Println("Inserting into mongodb")
-		x := collection.Bulk()
-		x.Unordered() //magic! :)
-		x.Insert(docs...)
-		res, err := x.Run()
-		if (err!=nil) {
-			panic(err)
-		}
-
-		fmt.Printf("done inserting into mongodb %v", res)
-}
-
-func main() {
-	pcItems := []PcItem{}
-
-	pcItems, err := ScrapeTanDoanh(pcItems)
-	if err != nil {
-		fmt.Println(err, pcItems)
-	}
-	fmt.Printf("length of pcitems 1: %v", len(pcItems))
-
-	pcItems, err = ScrapeHH(pcItems)
-	if err != nil {
-		fmt.Println(err, pcItems)
-	}
-	fmt.Printf("length of pcitems 2: %v", len(pcItems))
-
-	pcItems, err = ScrapeGamebank(pcItems)
-	if err != nil {
-		fmt.Println(err, pcItems)
-	}
-	fmt.Printf("length of pcitems 3: %v", len(pcItems))
-	
-	pcItems, err = ScrapeAZ(pcItems)
-	if err != nil {
-		fmt.Println(err, pcItems)
-	}
-	fmt.Printf("length of pcitems 4: %v", len(pcItems))
-
-	InsertMlab(pcItems)
 }
