@@ -25,6 +25,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
+	router.Run(":" + port)
 
 
 	router.GET("/queryAll", func(c *gin.Context) {
@@ -38,7 +39,6 @@ func main() {
 
 	})
 
-	router.Run(":" + port)
 
 
 }
