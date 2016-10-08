@@ -20,6 +20,10 @@ func main() {
 	router.Use(gin.Logger())
 	router.LoadHTMLGlob("templates/*.tmpl.html")
 	router.Static("/static", "static")
+
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.tmpl.html", nil)
+	})
 	router.GET("/getAllDocs", func(c *gin.Context) {
 	    result, err := api.GetAllDocs()
 		if(err==nil) {
@@ -27,9 +31,6 @@ func main() {
 		}	else {
 			c.JSON(400, err)
 		}
-	})
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
 	router.Run(":" + port)
 
