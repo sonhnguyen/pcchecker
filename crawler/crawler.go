@@ -5,10 +5,10 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"strconv"
 	"strings"
-	. "github.com/pcchecker/model"	
+	. "github.com/sonhnguyen/pcchecker/model"	
+	"github.com/sonhnguyen/pcchecker/mlabConnector"	
 )
 
-// type PcItem -> PcItemModel.PcItem
 
 func ScrapeTanDoanh (res []PcItem) ([]PcItem, error) {
 	ROOT_URL := "http://tandoanh.vn"
@@ -35,6 +35,7 @@ func ScrapeTanDoanh (res []PcItem) ([]PcItem, error) {
 			col5 := s.Find("td:nth-child(5)").Text()
 			item := PcItem{Title: col2, Price: price, Guarantee: col4, Available: col5, Vendor: "tandoanh", Category: category}
 			res = append(res, item)
+			fmt.Println("TanDoanh reading", len(res))
 		}
 	})
 	return res, nil
@@ -214,7 +215,7 @@ func ScrapeGamebank(res []PcItem) ([]PcItem, error) {
 
 			item := PcItem{Title: title, Link:productsLink[i],Price: price, Vendor: "gamebank", Category: category, Desc: desc, Image: images, Available: available, Origin: origin, Guarantee: guarantee}
 			res = append(res, item)
-			fmt.Println("gb reading %v / %v", item)
+			fmt.Println("gamebank reading %#v / %#v", i, len(productsLink))
 		}
 
 	}
@@ -286,4 +287,26 @@ func ScrapeAZ(res []PcItem) ([]PcItem, error) {
 		}
 	}
 	return res, nil
+}
+
+func Run() {
+	var pcItems = []PcItem{}
+	pcItems, err := ScrapeTanDoanh(pcItems)
+	if(err!=nil){
+		fmt.Println(err)
+	}
+	fmt.Println(len(pcItems))
+	// pcItems, err = ScrapeAZ(pcItems)
+	// if(err!=nil){
+	// 	fmt.Println(err)
+	// }
+	// pcItems, err = ScrapeGamebank(pcItems)
+	// if(err!=nil){
+	// 	fmt.Println(err)
+	// }
+	// pcItems, err = ScrapeHH(pcItems)
+	// if(err!=nil){
+	// 	fmt.Println(err)
+	// }
+	mlabConnector.InsertMlab(pcItems)
 }

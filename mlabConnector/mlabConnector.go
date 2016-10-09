@@ -3,7 +3,6 @@ package mlabConnector
 import (
 	"fmt"
 	"os"
-
 	. "github.com/sonhnguyen/pcchecker/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -44,7 +43,7 @@ func InsertMlab(items []PcItem) {
 	}
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
-	collection := sess.DB("heroku_tr3z0r48").C("products")
+	collection := sess.DB("heroku_tr3z0r48").C("godata")
 	//remove all before insert
 	collection.RemoveAll(nil)
 
@@ -53,14 +52,14 @@ func InsertMlab(items []PcItem) {
 	for i := 0; i < len(items); i++ {
 		docs[i] = items[i]
 	}
-	fmt.Println("Inserting into mongodb")
+	fmt.Println("Inserting into mongodb", len(docs))
 	x := collection.Bulk()
 	x.Unordered() //magic! :)
 	x.Insert(docs...)
+	fmt.Println("Inserting into mongodb %v", x)
 	res, err := x.Run()
 	if err != nil {
 		panic(err)
 	}
-
 	fmt.Printf("done inserting into mongodb %v", res)
 }

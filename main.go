@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
 	"github.com/sonhnguyen/pcchecker/service/products"
+	"github.com/sonhnguyen/pcchecker/crawler"
 )
 
 func main() {
@@ -38,5 +39,6 @@ func main() {
 	})
 	router.GET("/getProducts/:category/", productService.GetProducts)
 	router.GET("/getAllDocs", productService.GetAllProducts)
+	crawler.Run()
 	router.Run(":" + port)
 }
