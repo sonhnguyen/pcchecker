@@ -43,20 +43,21 @@ func InsertMlab(items []PcItem) {
 	}
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
-	collection := sess.DB("heroku_tr3z0r48").C("godata")
+	collection := sess.DB("heroku_tr3z0r48").C("products")
 	//remove all before insert
 	collection.RemoveAll(nil)
 
 	//prepare bulk insert
 	docs := make([]interface{}, len(items))
 	for i := 0; i < len(items); i++ {
+		items[i].Id = bson.NewObjectId() 
 		docs[i] = items[i]
 	}
 	fmt.Println("Inserting into mongodb", len(docs))
 	x := collection.Bulk()
 	x.Unordered() //magic! :)
 	x.Insert(docs...)
-	fmt.Println("Inserting into mongodb %v", x)
+	fmt.Println("Inserting into mongodb")
 	res, err := x.Run()
 	if err != nil {
 		panic(err)
