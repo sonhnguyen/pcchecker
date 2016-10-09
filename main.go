@@ -37,6 +37,7 @@ func main() {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
 	router.GET("/getProducts/:category/", productService.GetProducts)
+	router.GET("/product/:id/", productService.GetProduct)
 	router.GET("/getAllDocs", productService.GetAllProducts)
 	router.Run(":" + port)
 }
