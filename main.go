@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
 	"github.com/sonhnguyen/pcchecker/service/products"
-	"github.com/sonhnguyen/pcchecker/crawler"
 )
 
 func main() {
