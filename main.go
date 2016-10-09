@@ -40,6 +40,5 @@ func main() {
 	router.GET("/getProducts/:category/", productService.GetProducts)
 	router.GET("/product/:id/", productService.GetProduct)
 	router.GET("/getAllDocs", productService.GetAllProducts)
-	crawler.Run()
 	router.Run(":" + port)
 }

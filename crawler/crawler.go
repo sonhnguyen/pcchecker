@@ -296,17 +296,17 @@ func Run() {
 		fmt.Println(err)
 	}
 	fmt.Println(len(pcItems))
-	// pcItems, err = ScrapeAZ(pcItems)
-	// if(err!=nil){
-	// 	fmt.Println(err)
-	// }
-	// pcItems, err = ScrapeGamebank(pcItems)
-	// if(err!=nil){
-	// 	fmt.Println(err)
-	// }
-	// pcItems, err = ScrapeHH(pcItems)
-	// if(err!=nil){
-	// 	fmt.Println(err)
-	// }
+	pcItems, err = ScrapeAZ(pcItems)
+	if(err!=nil){
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapeGamebank(pcItems)
+	if(err!=nil){
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapeHH(pcItems)
+	if(err!=nil){
+		fmt.Println(err)
+	}
 	mlabConnector.InsertMlab(pcItems)
 }
