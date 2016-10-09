@@ -20,3 +20,9 @@ func GetAllProducts(c *gin.Context) {
 		c.JSON(400, err)
 	}
 }
+
+func GetProducts(c *gin.Context) {
+	category := c.Param("category")
+	name := c.Param("name")
+	c.JSON(200, category+name)
+}
