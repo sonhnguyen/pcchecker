@@ -36,7 +36,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
-	router.GET("/getProducts/:category/:name", productService.GetProducts)
+	router.GET("/getProducts/:category/", productService.GetProducts)
 	router.GET("/getAllDocs", productService.GetAllProducts)
 	router.Run(":" + port)
 }
