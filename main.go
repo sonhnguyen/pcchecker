@@ -1,19 +1,18 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
-    "github.com/gin-gonic/gin"
-    "github.com/pcchecker/api"
-)
 
+	"github.com/gin-gonic/gin"
+	"github.com/sonhnguyen/pcchecker/service/products"
+)
 
 func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		port = "5000"
 	}
 
 	router := gin.New()
@@ -24,14 +23,6 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
-	router.GET("/getAllDocs", func(c *gin.Context) {
-	    result, err := api.GetAllDocs()
-		if(err==nil) {
-			c.JSON(200, result)
-		}	else {
-			c.JSON(400, err)
-		}
-	})
+	router.GET("/getAllDocs", productService.GetAllProducts)
 	router.Run(":" + port)
-
 }
