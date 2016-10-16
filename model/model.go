@@ -18,3 +18,9 @@ type PcItem struct {
 	Image     []string      `json:"image" bson:"image"`
 	Vendor    string        `json:"vendor" bson:"vendor"`
 }
+
+type Build struct {
+	Id             bson.ObjectId       `json:"id" bson:"_id"`
+	DatetimeCreate bson.MongoTimestamp `json:"datetimeCreate" bson:"datetimeCreate"`
+	By             bson.ObjectId       `json:"by" bson:"by"`
+}

@@ -3,6 +3,7 @@ package mlabConnector
 import (
 	"fmt"
 	"os"
+
 	. "github.com/sonhnguyen/pcchecker/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -29,6 +30,7 @@ func GetMLab() ([]PcItem, error) {
 	}
 	return results, err
 }
+
 func InsertMlab(items []PcItem) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
@@ -43,14 +45,14 @@ func InsertMlab(items []PcItem) {
 	}
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
-	collection := sess.DB("heroku_tr3z0r48").C("products")
+	collection := sess.DB("heroku_tr3z0r48").C("godata")
 	//remove all before insert
 	collection.RemoveAll(nil)
 
 	//prepare bulk insert
 	docs := make([]interface{}, len(items))
 	for i := 0; i < len(items); i++ {
-		items[i].Id = bson.NewObjectId() 
+		items[i].Id = bson.NewObjectId()
 		docs[i] = items[i]
 	}
 	fmt.Println("Inserting into mongodb", len(docs))

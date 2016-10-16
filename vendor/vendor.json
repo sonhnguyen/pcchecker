@@ -90,6 +90,12 @@
 			"revisionTime": "2016-09-18T04:11:01Z"
 		},
 		{
+			"checksumSHA1": "VrSRDsi6CEv/RllO8h9YQ+r49FY=",
+			"path": "github.com/sonhnguyen/pcchecker/service/response",
+			"revision": "e168d1bceffa0c52f49ad8a48dc6adb1b512704e",
+			"revisionTime": "2016-10-09T11:15:41Z"
+		},
+		{
 			"checksumSHA1": "SG7K38/XSIBkDpnl8jCq1dR7Fgk=",
 			"path": "github.com/temoto/robotstxt-go",
 			"revision": "99f6b48954d8cafb2f10790957aa747ca7aeb530",
@@ -251,5 +257,5 @@
 			"revisionTime": "2016-08-18T02:01:20Z"
 		}
 	],
-	"rootPath": "github.com/sonhnguyen/pcchecker/"
+	"rootPath": "github.com/sonhnguyen/pcchecker"
 }
