@@ -287,6 +287,63 @@ func ScrapeGamebank(res []PcItem) ([]PcItem, error) {
 	return res, nil
 }
 
+func ScrapePCX(res []PcItem) ([]PcItem, error) {
+	ROOT_URL := "https://phongcachxanh.vn"
+	doc, err := goquery.NewDocument(ROOT_URL + "/shop/page/1")
+	if err != nil {
+		return nil, err
+	}
+	productsLink := []string{}
+	for {
+		doc.Find("div.oe_product_image > a").Each(func(i int, s *goquery.Selection) {
+			productLink, _ := s.Attr("href")
+			if productLink != "" {
+				productsLink = append(productsLink, ROOT_URL+productLink)
+			}
+		})
+		nextPage, _ := doc.Find("ul.pagination > li:last-child a").Attr("href")
+		if nextPage != "" {
+			doc, err = goquery.NewDocument(ROOT_URL + nextPage)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
+	}
+
+	//have productsLink contains all the products
+	for i := 0; i < len(productsLink); i++ {
+		doc, err := goquery.NewDocument(productsLink[i])
+		if err == nil {
+			images := []string{}
+			category := doc.Find("ol.breadcrumb li:nth-child(2) a").Text()
+			title := doc.Find("div#product_details > h1").Text()
+			shortDesc := doc.Find("div#product_details > div:nth-child(6) > p:nth-child(3)").Text()
+			doc.Find("img.img.img-responsive.optima_thumbnail").Each(func(i int, s *goquery.Selection) {
+				src, exists := s.Attr("src")
+				if exists {
+					images = append(images, ROOT_URL+src)
+				}
+			})
+			priceString := doc.Find("span.oe_currency_value").First().Text()
+			priceString = strings.Replace(priceString, ".", "", -1)
+			price, err2 := strconv.Atoi(priceString)
+			if err2 != nil {
+				price = 0
+			}
+			status := "Mới 100%, Chính hãng"
+			origin := doc.Find("div#product_details > div:nth-child(5) > b > span").Text()
+			desc := shortDesc + doc.Find("div#product_full_description").Text()
+			guarantee := doc.Find("div#product_details > b > span").Text()
+			item := PcItem{Title: title, Link: productsLink[i], Price: price, ShortDesc: shortDesc, Status: status, Vendor: "phongcachxanh", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
+			res = append(res, item)
+			fmt.Println("PhongCachXanh reading %#v / %#v, %#v", i, len(productsLink))
+		}
+	}
+	return res, nil
+}
+
 func ScrapeAZ(res []PcItem) ([]PcItem, error) {
 	ROOT_URL := "http://www.azaudio.vn"
 	productsLink := []string{}
@@ -360,7 +417,7 @@ func Run() {
 	// 	fmt.Println(err)
 	// }
 	// fmt.Println(len(pcItems))
-	pcItems, err := ScrapeTanDoanhVer2(pcItems)
+	pcItems, err := ScrapePCX(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}

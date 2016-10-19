@@ -39,7 +39,7 @@ func main() {
 		c.HTML(http.StatusOK, "index.tmpl.html", nil)
 	})
 
-	router.GET("/crawTanDoanh", func(c *gin.Context) {
+	router.GET("/runCrawler", func(c *gin.Context) {
 		c.JSON(200, nil)
 		go crawler.Run()
 	})
