@@ -1,13 +1,14 @@
 package crawler
 
 import (
+	"crypto/tls"
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/sonhnguyen/pcchecker/mlabConnector"
 	. "github.com/sonhnguyen/pcchecker/model"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 func ScrapeTanDoanh(res []PcItem) ([]PcItem, error) {
@@ -287,6 +288,92 @@ func ScrapeGamebank(res []PcItem) ([]PcItem, error) {
 	return res, nil
 }
 
+func ScrapeGearvn(res []PcItem) ([]PcItem, error) {
+	ROOT_URL := "https://gearvn.com"
+
+	categoryLinks := []string{"http://gearvn.com/collections/ban-phim-co-gaming/",
+		"http://gearvn.com/collections/gaming-mouse/",
+		"http://gearvn.com/collections/headphones/",
+		"http://gearvn.com/collections/mouse-pad/",
+		"http://gearvn.com/collections/ghe-choi-game/",
+		"http://gearvn.com/collections/linh-kien-may-tinh/",
+		"http://gearvn.com/collections/laptop-gaming-1/",
+		"http://gearvn.com/collections/phu-kien/"}
+	productsLink := []string{}
+
+	//creating unsafe connection
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
+
+	for i := 0; i < len(categoryLinks); i++ {
+		doc, err := goquery.NewDocument(categoryLinks[i])
+		if err != nil {
+			return nil, err
+		}
+		for {
+			doc.Find("div.product-row > a").Each(func(i int, s *goquery.Selection) {
+				productLink, _ := s.Attr("href")
+				if productLink != "" {
+					productsLink = append(productsLink, ROOT_URL+productLink)
+				}
+			})
+			nextPage, _ := doc.Find("ul.pagination-list > li:last-child a").Attr("href")
+			if nextPage != "" && (ROOT_URL+nextPage) != doc.Url.String() {
+				web, err := client.Get(ROOT_URL + nextPage)
+				if err != nil {
+					return nil, err
+				}
+
+				doc, err = goquery.NewDocumentFromResponse(web)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				break
+			}
+		}
+	}
+	fmt.Println("gearvn reading %#v", len(categoryLinks))
+
+	//have productsLink contains all the products
+	for i := 0; i < len(productsLink); i++ {
+		web, err := client.Get(productsLink[i])
+		if err != nil {
+			return nil, err
+		}
+
+		doc, err := goquery.NewDocumentFromResponse(web)
+		if err == nil {
+			images := []string{}
+			category := doc.Find("#breadcrumb > div > div > span:nth-child(4) > a").Text()
+			title := doc.Find("h1.product_name").Text()
+			desc := doc.Find("div.tab-content").Text()
+			doc.Find("div.product_thumbnail img").Each(func(i int, s *goquery.Selection) {
+				src, exists := s.Attr("src")
+				if exists {
+					images = append(images, src)
+				}
+			})
+			priceString := doc.Find("span.product_sale_price").First().Text()
+			priceString = strings.Replace(priceString, ",", "", -1)
+			priceString = strings.Replace(priceString, "₫", "", -1)
+			price, err2 := strconv.Atoi(priceString)
+			if err2 != nil {
+				price = 0
+			}
+			status := doc.Find("div.product_parameters > p:nth-child(4) > span").Text()
+			origin := doc.Find("div.product_parameters > p:nth-child(3) > span").Text()
+			guarantee := doc.Find("div.product_parameters > p:nth-child(5) > span").Text()
+			item := PcItem{Title: title, Link: productsLink[i], Price: price, Status: status, Vendor: "gearvn", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
+			res = append(res, item)
+			fmt.Println("gearvn reading %#v / %#v", i, len(productsLink))
+		}
+	}
+	return res, nil
+}
+
 func ScrapePCX(res []PcItem) ([]PcItem, error) {
 	ROOT_URL := "https://phongcachxanh.vn"
 	doc, err := goquery.NewDocument(ROOT_URL + "/shop/page/1")
@@ -417,7 +504,7 @@ func Run() {
 	// 	fmt.Println(err)
 	// }
 	// fmt.Println(len(pcItems))
-	pcItems, err := ScrapePCX(pcItems)
+	pcItems, err := ScrapeGearvn(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
