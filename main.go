@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+    "github.com/subosito/gotenv"
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
 	"github.com/sonhnguyen/pcchecker/crawler"
@@ -12,12 +12,12 @@ import (
 	"github.com/sonhnguyen/pcchecker/service/products"
 )
 
+func init() {
+    gotenv.Load()
+}
+
 func main() {
 	port := os.Getenv("PORT")
-
-	if port == "" {
-		port = "5000"
-	}
 
 	router := gin.New()
 
