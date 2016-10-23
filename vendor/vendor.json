@@ -96,6 +96,12 @@
 			"revisionTime": "2016-10-09T11:15:41Z"
 		},
 		{
+			"checksumSHA1": "IFy43Tn6bKOtJU+gg6rA5F18nIM=",
+			"path": "github.com/subosito/gotenv",
+			"revision": "6918d9e6b40d41a3f8bb32180bb4f93db810f6e4",
+			"revisionTime": "2016-09-15T00:51:30Z"
+		},
+		{
 			"checksumSHA1": "SG7K38/XSIBkDpnl8jCq1dR7Fgk=",
 			"path": "github.com/temoto/robotstxt-go",
 			"revision": "99f6b48954d8cafb2f10790957aa747ca7aeb530",
