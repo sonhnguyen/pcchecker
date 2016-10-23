@@ -499,27 +499,29 @@ func ScrapeAZ(res []PcItem) ([]PcItem, error) {
 
 func Run() {
 	var pcItems = []PcItem{}
-	// pcItems, err := ScrapeTanDoanh(pcItems)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(len(pcItems))
-	pcItems, err := ScrapeGearvn(pcItems)
+	pcItems, err := ScrapeTanDoanhVer2(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(len(pcItems))
-	// pcItems, err = ScrapeAZ(pcItems)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// pcItems, err = ScrapeGamebank(pcItems)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// pcItems, err = ScrapeHH(pcItems)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	pcItems, err = ScrapeGearvn(pcItems)
+	if err != nil {
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapeAZ(pcItems)
+	if err != nil {
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapePCX(pcItems)
+	if err != nil {
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapeGamebank(pcItems)
+	if err != nil {
+		fmt.Println(err)
+	}
+	pcItems, err = ScrapeHH(pcItems)
+	if err != nil {
+		fmt.Println(err)
+	}
 	mlabConnector.InsertMlab(pcItems)
 }
