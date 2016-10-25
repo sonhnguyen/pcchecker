@@ -503,25 +503,32 @@ func Run() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done tandoanh", len(pcItems))
 	pcItems, err = ScrapeGearvn(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done ScrapeGearvn", len(pcItems))
 	pcItems, err = ScrapeAZ(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done ScrapeAZ", len(pcItems))
 	pcItems, err = ScrapePCX(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done ScrapePCX", len(pcItems))
 	pcItems, err = ScrapeGamebank(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done ScrapeGamebank", len(pcItems))
 	pcItems, err = ScrapeHH(pcItems)
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Printf("done ScrapeHH", len(pcItems))
 	mlabConnector.InsertMlab(pcItems)
+	fmt.Printf("done insert")
 }
