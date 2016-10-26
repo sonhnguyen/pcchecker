@@ -44,7 +44,7 @@ func main() {
 		go crawler.Run()
 	})
 	router.GET("/wakemydyno.txt", func(c *gin.Context) {
-		c.JSON(200, "hello")
+		c.JSON(200, "helloo")
 	})
 	router.GET("/getProducts/:category/", productService.GetProducts)
 	router.GET("/product/:id/", productService.GetProduct)
