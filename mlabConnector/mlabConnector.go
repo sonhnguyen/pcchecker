@@ -66,3 +66,14 @@ func InsertMlab(items []PcItem) {
 	}
 	fmt.Printf("done inserting into mongodb %v", res)
 }
+
+func GetCollection(collection string) (*mgo.Collection, error) {
+	uri := os.Getenv("MONGODB_URI")
+	fmt.Println("get collection", collection)
+	sess, err := mgo.Dial(uri)
+	if err != nil {
+		return nil, err
+	}
+	sess.SetSafe(&mgo.Safe{})
+	return sess.DB("heroku_tr3z0r48").C(collection), nil
+}
