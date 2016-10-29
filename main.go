@@ -47,8 +47,8 @@ func main() {
 	router.GET("/wakemydyno.txt", func(c *gin.Context) {
 		c.JSON(200, "hello")
 	})
-	router.GET("/getProducts/:category/", productService.GetProducts)
-	router.GET("/product/:id/", productService.GetProduct)
+
+	productService.RegisterAPI(router)
 
 	router.POST("/createBuild", buildService.CreateBuild)
 	router.Run(":" + port)

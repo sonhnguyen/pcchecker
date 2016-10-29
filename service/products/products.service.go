@@ -23,10 +23,18 @@ import (
 // 	}
 // }
 
+func RegisterAPI(router *gin.Engine) {
+
+	router.GET("/getProducts/:category/", GetProducts)
+
+	router.GET("/product/:id/", GetProductById)
+}
+
 func GetProducts(c *gin.Context) {
 	category := c.Param("category")
 
 	fmt.Println(category)
+	fmt.Println("Hehehe")
 	uri := os.Getenv("MONGODB_URI")
 	fmt.Println(uri)
 	if uri == "" {
@@ -50,7 +58,7 @@ func GetProducts(c *gin.Context) {
 	}
 }
 
-func GetProduct(c *gin.Context) {
+func GetProductById(c *gin.Context) {
 	id := c.Param("id")
 
 	fmt.Println(id)
