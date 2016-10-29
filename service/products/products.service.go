@@ -6,23 +6,22 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sonhnguyen/pcchecker/api"
 	"github.com/sonhnguyen/pcchecker/model"
 	"github.com/sonhnguyen/pcchecker/service/response"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func GetAllProducts(c *gin.Context) {
-	results, err := api.GetAllDocs()
-	if err == nil {
-		c.JSON(200, gin.H{
-			"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
-			"result": results})
-	} else {
-		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "ERROR"), "result": nil})
-	}
-}
+// func GetAllProducts(c *gin.Context) {
+// 	results, err := api.GetAllDocs()
+// 	if err == nil {
+// 		c.JSON(200, gin.H{
+// 			"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+// 			"result": results})
+// 	} else {
+// 		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "ERROR"), "result": nil})
+// 	}
+// }
 
 func GetProducts(c *gin.Context) {
 	category := c.Param("category")

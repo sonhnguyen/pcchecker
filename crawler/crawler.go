@@ -3,12 +3,13 @@ package crawler
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/sonhnguyen/pcchecker/mlabConnector"
-	. "github.com/sonhnguyen/pcchecker/model"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
+	"github.com/sonhnguyen/pcchecker/mlabConnector"
+	. "github.com/sonhnguyen/pcchecker/model"
 )
 
 func ScrapeTanDoanh(res []PcItem) ([]PcItem, error) {
@@ -71,7 +72,7 @@ func ScrapeTanDoanhVer2(res []PcItem) ([]PcItem, error) {
 						var available string
 						var priceString string
 						var price int
-						go docItem.Find("table tbody tr td table tbody tr td table tbody tr td table tbody tr td table tbody tr td table").Each(func(iItem int, sItem *goquery.Selection) {
+						docItem.Find("table tbody tr td table tbody tr td table tbody tr td table tbody tr td table tbody tr td table").Each(func(iItem int, sItem *goquery.Selection) {
 							if iItem == 6 {
 								sItem.Find("tbody tr td a img").Each(func(iImage int, sImage *goquery.Selection) {
 									hrefImage, _ := sImage.Attr("src")
@@ -95,9 +96,9 @@ func ScrapeTanDoanhVer2(res []PcItem) ([]PcItem, error) {
 								}
 							}
 						})
-						item := PcItem{Title: title, Price: price, Guarantee: guarantee, Image: imageList, Available: available, Vendor: "tandoanh", Category: categoryTitle}
+						item := PcItem{Title: title, Price: price, Guarantee: guarantee, Image: imageList, Available: available, Vendor: "tandoanh", Category: categoryTitle, Link: ROOT_URL + hrefItem}
 						counting++
-						fmt.Println("Done item ", counting, title)
+						fmt.Println("Done item ", counting, item.Title, item.Link)
 						res = append(res, item)
 					}
 				})
