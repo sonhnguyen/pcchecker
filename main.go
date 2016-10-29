@@ -1,15 +1,16 @@
 package main
 
 import (
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
 	"github.com/sonhnguyen/pcchecker/crawler"
 	"github.com/sonhnguyen/pcchecker/service/build"
 	"github.com/sonhnguyen/pcchecker/service/products"
 	"github.com/subosito/gotenv"
-	"net/http"
-	"os"
-	"time"
 )
 
 func init() {
@@ -48,7 +49,6 @@ func main() {
 	})
 	router.GET("/getProducts/:category/", productService.GetProducts)
 	router.GET("/product/:id/", productService.GetProduct)
-	router.GET("/getAllDocs", productService.GetAllProducts)
 
 	router.POST("/createBuild", buildService.CreateBuild)
 	router.Run(":" + port)
