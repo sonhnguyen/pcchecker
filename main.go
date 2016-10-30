@@ -49,7 +49,8 @@ func main() {
 	})
 
 	productService.RegisterAPI(router)
+	buildService.RegisterAPI(router)
 
-	router.POST("/createBuild", buildService.CreateBuild)
+	//router.POST("/createBuild", buildService.CreateBuild)
 	router.Run(":" + port)
 }
