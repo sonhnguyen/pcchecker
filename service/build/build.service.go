@@ -2,18 +2,24 @@ package buildService
 
 import (
 	"errors"
-	"fmt"
 	"math"
+	"math/rand"
+	"strconv"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/gin-gonic/gin"
+	"github.com/sonhnguyen/pcchecker/mlabConnector"
+	. "github.com/sonhnguyen/pcchecker/model"
 	"github.com/sonhnguyen/pcchecker/service/response"
 )
 
 type CreateBuildPostData struct {
-	C  string `json:"userID" binding:"required"`
-	So int    `json:"number" binding:"required"`
+	Items []string `json:"items" binding:"required"`
 }
+
+var buildCollection, _ = mlabConnector.GetCollection("build")
 
 func CreateBuild(c *gin.Context) {
 	var data CreateBuildPostData
@@ -21,15 +27,24 @@ func CreateBuild(c *gin.Context) {
 	if err != nil {
 		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "CONNECT_ERROR"), "result": nil})
 	}
-	datetimeNow := time.Now()
-	fmt.Println(encode(datetimeNow.UnixNano() / int64(time.Microsecond)))
-	fmt.Println(datetimeNow.UnixNano() / int64(time.Microsecond))
-	fmt.Println(datetimeNow.UnixNano())
+	var datetimeNow time.Time
+	encodedString := ""
+	for len(encodedString) != 11 {
+		datetimeNow = time.Now()
+		randomIntWithDateNow := strconv.Itoa(rand.Intn(1e2)) + strconv.FormatInt(datetimeNow.UnixNano()/int64(time.Microsecond), 10)
+		if n, err := strconv.ParseInt(randomIntWithDateNow, 10, 64); err == nil {
+			encodedString = encode(n)
+		}
+	}
+	err = buildCollection.Insert(&Build{Id: bson.NewObjectId(), DatetimeCreate: datetimeNow, Detail: data.Items, EncodedURL: encodedString})
 
-	c.JSON(200, gin.H{
-		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
-		"result": data})
-
+	if err != nil {
+		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "CONNECT_ERROR"), "result": nil})
+	} else {
+		c.JSON(200, gin.H{
+			"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+			"result": encodedString})
+	}
 }
 
 func encode(num int64) string {
@@ -42,7 +57,6 @@ func encode(num int64) string {
 		if remainder < 0 {
 			remainder += base
 		}
-		fmt.Println(remainder, divisionResult)
 		divisionResult = math.Floor(divisionResult / float64(base))
 		encoded = string(alphabet[remainder]) + encoded
 	}
