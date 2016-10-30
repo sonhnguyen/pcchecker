@@ -18,6 +18,7 @@ import (
 func RegisterAPI(router *gin.Engine) {
 	router.POST("/createBuild", CreateBuild)
 	router.GET("/getBuildById", GetBuildById)
+	router.GET("/build/:encodedURL", GetBuildByEncodedURL)
 }
 
 type CreateBuildPostData struct {
@@ -68,12 +69,33 @@ func GetBuildById(c *gin.Context) {
 	for i := range buildResult.Detail {
 		oids[i] = bson.ObjectIdHex(buildResult.Detail[i])
 	}
-	var productsResult []PcItem
-	productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).All(&productsResult)
-	responseData.Detail = productsResult
+	productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).All(&responseData.Detail)
 	c.JSON(200, gin.H{
 		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
 		"result": responseData})
+}
+
+func GetBuildByEncodedURL(c *gin.Context) {
+	encodedURL := c.Param("encodedURL")
+
+	var buildResult Build
+	var responseData BuildResponse
+	buildCollection.Find(bson.M{"encodedurl": encodedURL}).One(&buildResult)
+
+	responseData.Id = buildResult.Id
+	responseData.DatetimeCreate = buildResult.DatetimeCreate
+	responseData.By = buildResult.By
+	responseData.EncodedURL = buildResult.EncodedURL
+
+	oids := make([]bson.ObjectId, len(buildResult.Detail))
+	for i := range buildResult.Detail {
+		oids[i] = bson.ObjectIdHex(buildResult.Detail[i])
+	}
+	productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).All(&responseData.Detail)
+	c.JSON(200, gin.H{
+		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+		"result": responseData})
+
 }
 
 type BuildResponse struct {
