@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/sonhnguyen/pcchecker/mlabConnector"
+	//"github.com/sonhnguyen/pcchecker/mlabConnector"
 	. "github.com/sonhnguyen/pcchecker/model"
 )
 
@@ -432,104 +432,146 @@ func ScrapePCX(res []PcItem) ([]PcItem, error) {
 	return res, nil
 }
 
-func ScrapeAZ(res []PcItem) ([]PcItem, error) {
+func ScrapeAZ(chProduct chan PcItem, chFinished chan bool) {
+	productLinkCh := make(chan string, 1000)
 	ROOT_URL := "http://www.azaudio.vn"
-	productsLink := []string{}
+	fmt.Print("productlink")
 
 	//category, may need to update in future
 	categoryLinks := []string{"http://www.azaudio.vn/audio", "http://www.azaudio.vn/gaming-gear", "http://www.azaudio.vn/loa", "http://www.azaudio.vn/may-tinh"}
-	for i := 0; i < len(categoryLinks); i++ {
-		catPage, err2 := goquery.NewDocument(categoryLinks[i])
-		if err2 != nil {
-			return nil, err2
-		}
-		for true {
-			catPage.Find(".item-prd a.center-block").Each(func(i int, s *goquery.Selection) {
-				productLink, err := s.Attr("href")
-				if err && productLink != "" {
-					productsLink = append(productsLink, productLink)
-				}
-			})
+	defer func() {
+		// Notify that we're done after this function
+		chFinished <- true
+	}()
 
-			nextPage, err := catPage.Find("a.ajaxpagerlink").Attr("href")
-			if err && nextPage != "" {
-				nextPage = ROOT_URL + nextPage
-				catPage, err2 = goquery.NewDocument(nextPage)
-				fmt.Printf("link page", nextPage)
-				if err2 != nil {
-					return nil, err2
-				}
-			} else {
-				break
-			}
-		}
-	}
-
-	//have productsLink contains all the products
-	for i := 0; i < len(productsLink); i++ {
-		doc, err := goquery.NewDocument(productsLink[i])
-		if err == nil {
-			images := []string{}
-			category := doc.Find("a.itemcrumb.active > span").Text()
-			shortDesc := doc.Find(".briefContent p").Text()
-			title := doc.Find("div.prd-content h1").Text()
-			desc := doc.Find(".contentFull").Text()
-			origin := doc.Find(".prd-content .brands a").Text()
-			guarantee := doc.Find(".prd-content div.guarantee").Text()
-			doc.Find(".prd-detail img").Each(func(i int, s *goquery.Selection) {
-				src, exists := s.Attr("src")
-				if exists {
-					images = append(images, ROOT_URL+src)
-				}
-			})
-			priceString := doc.Find("span.new-price").Text()
-			priceString = strings.Replace(priceString, ".", "", -1)
-			priceString = strings.Replace(priceString, "₫", "", -1)
-			priceString = strings.Replace(priceString, " ", "", -1)
-			price, err2 := strconv.Atoi(priceString)
+	for i := range categoryLinks {
+		categoryLink := categoryLinks[i]
+		go func() {
+			catPage, err2 := goquery.NewDocument(categoryLink)
 			if err2 != nil {
-				price = 0
+				return
 			}
-			item := PcItem{Title: title, ShortDesc: shortDesc, Link: productsLink[i], Price: price, Vendor: "azaudio", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
-			res = append(res, item)
-			fmt.Println("azaudio reading %#v / %#v", i, len(productsLink))
-		}
+			for true {
+
+				catPage.Find(".item-prd a.center-block").Each(func(i int, s *goquery.Selection) {
+					productLink, err := s.Attr("href")
+					if err && productLink != "" {
+						fmt.Print("something", productLink)
+						//productsLink = append(productsLink, productLink)
+						productLinkCh <- productLink
+					}
+				})
+
+				nextPage, err := catPage.Find("a.ajaxpagerlink").Attr("href")
+				if err && nextPage != "" {
+					nextPage = ROOT_URL + nextPage
+					catPage, err2 = goquery.NewDocument(nextPage)
+					fmt.Printf("link page", nextPage)
+					if err2 != nil {
+						return
+					}
+				} else {
+					return
+				}
+			}
+
+		}()
 	}
-	return res, nil
+
+	const workerCount = 100
+	for i := 0; i < workerCount; i++ {
+		go func() {
+			for {
+				select {
+				case productLink := <-productLinkCh:
+					doc, err := goquery.NewDocument(productLink)
+					fmt.Print("productlink received", productLink)
+					if err == nil {
+						images := []string{}
+						category := doc.Find("a.itemcrumb.active > span").Text()
+						shortDesc := doc.Find(".briefContent p").Text()
+						title := doc.Find("div.prd-content h1").Text()
+						desc := doc.Find(".contentFull").Text()
+						origin := doc.Find(".prd-content .brands a").Text()
+						guarantee := doc.Find(".prd-content div.guarantee").Text()
+						doc.Find(".prd-detail img").Each(func(i int, s *goquery.Selection) {
+							src, exists := s.Attr("src")
+							if exists {
+								images = append(images, ROOT_URL+src)
+							}
+						})
+						priceString := doc.Find("span.new-price").Text()
+						priceString = strings.Replace(priceString, ".", "", -1)
+						priceString = strings.Replace(priceString, "₫", "", -1)
+						priceString = strings.Replace(priceString, " ", "", -1)
+						price, err2 := strconv.Atoi(priceString)
+						if err2 != nil {
+							price = 0
+						}
+						item := PcItem{Title: title, ShortDesc: shortDesc, Link: productLink, Price: price, Vendor: "azaudio", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
+						//res = append(res, item)
+						fmt.Println("azaudio reading %#v / %#v", len(productLink))
+						chProduct <- item
+					}
+				}
+			}
+		}()
+	}
+
 }
 
 func Run() {
-	var pcItems = []PcItem{}
-	pcItems, err := ScrapeTanDoanhVer2(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done tandoanh", len(pcItems))
-	pcItems, err = ScrapeGearvn(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done ScrapeGearvn", len(pcItems))
-	pcItems, err = ScrapeAZ(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done ScrapeAZ", len(pcItems))
-	pcItems, err = ScrapePCX(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done ScrapePCX", len(pcItems))
-	pcItems, err = ScrapeGamebank(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done ScrapeGamebank", len(pcItems))
-	pcItems, err = ScrapeHH(pcItems)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("done ScrapeHH", len(pcItems))
-	mlabConnector.InsertMlab(pcItems)
-	fmt.Printf("done insert")
+	// var pcItems = []PcItem{}
+	// pcItems, err := ScrapeTanDoanhVer2(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done tandoanh", len(pcItems))
+	// pcItems, err = ScrapeGearvn(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done ScrapeGearvn", len(pcItems))
+	// pcItems, err = ScrapeAZ(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done ScrapeAZ", len(pcItems))
+	// pcItems, err = ScrapePCX(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done ScrapePCX", len(pcItems))
+	// pcItems, err = ScrapeGamebank(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done ScrapeGamebank", len(pcItems))
+	// pcItems, err = ScrapeHH(pcItems)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Printf("done ScrapeHH", len(pcItems))
+
+	// Channels
+	chProduct := make(chan PcItem)
+	chFinished := make(chan bool)
+
+	go ScrapeAZ(chProduct, chFinished)
+	// case vendor == "azaudio":
+	// 	go ScrapeAZ(chProduct, chFinished)
+	pcItems := []PcItem{}
+	go func() {
+		for {
+			select {
+			case pcItem := <-chProduct:
+				pcItems = append(pcItems, pcItem)
+				fmt.Print("new item", len(pcItems))
+
+			case <-chFinished:
+				fmt.Printf("len pc items %v", len(pcItems))
+				//mlabConnector.InsertMlab(pcItems)
+			}
+		}
+	}()
 }

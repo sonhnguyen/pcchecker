@@ -37,7 +37,6 @@ func GetProducts(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
 		"result": results})
-
 }
 
 func GetProductById(c *gin.Context) {
