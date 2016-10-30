@@ -7,14 +7,16 @@ import (
 	"strconv"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sonhnguyen/pcchecker/mlabConnector"
+	. "github.com/sonhnguyen/pcchecker/model"
 	"github.com/sonhnguyen/pcchecker/service/response"
 )
 
 type CreateBuildPostData struct {
-	C  string `json:"userID" binding:"required"`
-	So int    `json:"number" binding:"required"`
+	Items []string `json:"items" binding:"required"`
 }
 
 var buildCollection, _ = mlabConnector.GetCollection("build")
@@ -34,9 +36,15 @@ func CreateBuild(c *gin.Context) {
 			encodedString = encode(n)
 		}
 	}
-	c.JSON(200, gin.H{
-		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
-		"result": encodedString})
+	err = buildCollection.Insert(&Build{Id: bson.NewObjectId(), DatetimeCreate: datetimeNow, Detail: data.Items, EncodedURL: encodedString})
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "CONNECT_ERROR"), "result": nil})
+	} else {
+		c.JSON(200, gin.H{
+			"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+			"result": encodedString})
+	}
 }
 
 func encode(num int64) string {

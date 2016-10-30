@@ -1,6 +1,10 @@
 package PcItemModel
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"time"
+
+	"gopkg.in/mgo.v2/bson"
+)
 
 // PcItem asdklajl
 type PcItem struct {
@@ -20,7 +24,9 @@ type PcItem struct {
 }
 
 type Build struct {
-	Id             bson.ObjectId       `json:"id" bson:"_id"`
-	DatetimeCreate bson.MongoTimestamp `json:"datetimeCreate" bson:"datetimeCreate"`
-	By             bson.ObjectId       `json:"by" bson:"by"`
+	Id             bson.ObjectId  `json:"id" bson:"_id"`
+	DatetimeCreate time.Time      `json:"datetimeCreate" bson:"datetimeCreate"`
+	By             *bson.ObjectId `json:"by,omitempty" bson:"by,omitempty"`
+	EncodedURL     string         `json:"encodedurl" bson:"encodedurl"`
+	Detail         []string       `json:"detail" bson:"detail"`
 }
