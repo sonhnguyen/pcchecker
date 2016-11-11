@@ -24,7 +24,7 @@ import (
 func RegisterAPI(router *gin.Engine) {
 
 	router.GET("/getProducts/:category/", GetProducts)
-
+	router.GET("/getProducts", GetProductsV2)
 	router.GET("/product/:id/", GetProductById)
 }
 
@@ -37,7 +37,19 @@ func GetProducts(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
 		"result": results})
+}
 
+func GetProductsV2(c *gin.Context) {
+	name := c.Query("name")
+	vendor := c.Query("vendor")
+	category := c.Query("category")
+	var results []PcItemModel.PcItem
+
+	productCollection.Find(bson.M{"title": bson.RegEx{name, ""}, "vendor": bson.RegEx{vendor, ""}, "category": bson.RegEx{category, ""}}).All(&results)
+
+	c.JSON(200, gin.H{
+		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+		"result": results})
 }
 
 func GetProductById(c *gin.Context) {
