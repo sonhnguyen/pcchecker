@@ -9,6 +9,8 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sonhnguyen/pcchecker/mlabConnector"
 	. "github.com/sonhnguyen/pcchecker/model"
@@ -32,25 +34,47 @@ func CreateBuild(c *gin.Context) {
 	var data CreateBuildPostData
 	err := c.BindJSON(&data)
 	if err != nil {
-		c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "CONNECT_ERROR"), "result": nil})
+		c.JSON(500, gin.H{"error": responseService.ResponseError(500, err, "CONNECT_ERROR"), "result": nil})
 	} else {
-		var datetimeNow time.Time
-		encodedString := ""
-		for len(encodedString) != 11 {
-			datetimeNow = time.Now()
-			randomIntWithDateNow := strconv.Itoa(rand.Intn(1e2)) + strconv.FormatInt(datetimeNow.UnixNano()/int64(time.Microsecond), 10)
-			if n, err := strconv.ParseInt(randomIntWithDateNow, 10, 64); err == nil {
-				encodedString = encode(n)
+		oids := make([]bson.ObjectId, len(data.Items))
+		for i := range data.Items {
+			if bson.IsObjectIdHex(data.Items[i]) {
+				oids[i] = bson.ObjectIdHex(data.Items[i])
+			} else {
+				err = errors.New(data.Items[i] + " is not a valid data for CreateBuild")
 			}
 		}
-		err = buildCollection.Insert(&Build{Id: bson.NewObjectId(), DatetimeCreate: datetimeNow, Detail: data.Items, EncodedURL: encodedString})
-
 		if err != nil {
-			c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "CONNECT_ERROR"), "result": nil})
+			c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "INVALID_DATA"), "result": nil})
 		} else {
-			c.JSON(200, gin.H{
-				"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
-				"result": encodedString})
+			count, err := productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).Count()
+			fmt.Println(count)
+			if err != nil {
+				c.JSON(500, gin.H{"error": responseService.ResponseError(500, err, "CONNECT_ERROR"), "result": nil})
+			} else {
+				if count != len(data.Items) {
+					c.JSON(400, gin.H{"error": responseService.ResponseError(400, err, "INVALID_DATA"), "result": nil})
+				} else {
+					var datetimeNow time.Time
+					encodedString := ""
+					for len(encodedString) != 11 {
+						datetimeNow = time.Now()
+						randomIntWithDateNow := strconv.Itoa(rand.Intn(1e2)) + strconv.FormatInt(datetimeNow.UnixNano()/int64(time.Microsecond), 10)
+						if n, err := strconv.ParseInt(randomIntWithDateNow, 10, 64); err == nil {
+							encodedString = encode(n)
+						}
+					}
+					err = buildCollection.Insert(&Build{Id: bson.NewObjectId(), DatetimeCreate: datetimeNow, Detail: data.Items, EncodedURL: encodedString})
+
+					if err != nil {
+						c.JSON(500, gin.H{"error": responseService.ResponseError(500, err, "CONNECT_ERROR"), "result": nil})
+					} else {
+						c.JSON(200, gin.H{
+							"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+							"result": encodedString})
+					}
+				}
+			}
 		}
 	}
 }
