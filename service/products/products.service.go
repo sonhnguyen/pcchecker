@@ -2,6 +2,7 @@ package productService
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sonhnguyen/pcchecker/mlabConnector"
@@ -32,6 +33,7 @@ var productCollection, _ = mlabConnector.GetCollection("products")
 
 func GetProducts(c *gin.Context) {
 	category := c.Param("category")
+	fmt.Println(category)
 	var results []PcItemModel.PcItem
 	productCollection.Find(bson.M{"category": category}).All(&results)
 	c.JSON(200, gin.H{
@@ -41,11 +43,21 @@ func GetProducts(c *gin.Context) {
 
 func GetProductsV2(c *gin.Context) {
 	name := c.Query("name")
-	vendor := c.Query("vendor")
-	category := c.Query("category")
+	// vendor := c.Query("vendor")
+	// category := c.Query("category")
+	// fmt.Println(name, vendor, category)
 	var results []PcItemModel.PcItem
 
-	productCollection.Find(bson.M{"title": bson.RegEx{name, ""}, "vendor": bson.RegEx{vendor, ""}, "category": bson.RegEx{category, ""}}).All(&results)
+	err := productCollection.EnsureIndexKey("$text:title", "$text:category", "$text:origin", "$text:gearvn")
+	if err != nil {
+		fmt.Printf("%v", err)
+	}
+
+	productCollection.Find(
+		bson.M{"$text": bson.M{"$search": name, "$caseSensitive": false, "$diacriticSensitive": false}},
+	).Select(
+		bson.M{"score": bson.M{"$meta": "textScore"}},
+	).Sort("$textScore:score").All(&results)
 
 	c.JSON(200, gin.H{
 		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
