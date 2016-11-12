@@ -42,7 +42,7 @@ func GetProducts(c *gin.Context) {
 }
 
 func GetProductsV2(c *gin.Context) {
-	name := c.Query("name")
+	query := c.Query("query")
 	// vendor := c.Query("vendor")
 	// category := c.Query("category")
 	// fmt.Println(name, vendor, category)
@@ -54,7 +54,7 @@ func GetProductsV2(c *gin.Context) {
 	}
 
 	productCollection.Find(
-		bson.M{"$text": bson.M{"$search": name, "$caseSensitive": false, "$diacriticSensitive": false}},
+		bson.M{"$text": bson.M{"$search": query, "$caseSensitive": false, "$diacriticSensitive": false}},
 	).Select(
 		bson.M{"score": bson.M{"$meta": "textScore"}},
 	).Sort("$textScore:score").All(&results)
