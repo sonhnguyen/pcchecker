@@ -21,6 +21,7 @@ func RegisterAPI(router *gin.Engine) {
 	router.POST("/createBuild", CreateBuild)
 	router.GET("/getBuildById", GetBuildById)
 	router.GET("/build/:encodedURL", GetBuildByEncodedURL)
+	router.GET("/getBuildRecent", GetBuildRecent)
 }
 
 type CreateBuildPostData struct {
@@ -120,6 +121,25 @@ func GetBuildByEncodedURL(c *gin.Context) {
 		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
 		"result": responseData})
 
+}
+
+func GetBuildRecent(c *gin.Context) {
+	limit := c.Query("limit")
+	if limit == "" {
+		limit = "10"
+	}
+	fmt.Println(limit)
+	limitInt, err := strconv.Atoi(limit)
+	if err != nil {
+		limitInt = 0
+	}
+
+	var responseData []BuildResponse
+	buildCollection.Find(nil).Limit(limitInt).Sort("-timestamp").All(&responseData)
+
+	c.JSON(200, gin.H{
+		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+		"result": responseData})
 }
 
 type BuildResponse struct {
