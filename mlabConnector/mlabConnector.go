@@ -45,7 +45,7 @@ func InsertMlab(items []PcItem) {
 	}
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
-	collection := sess.DB("heroku_tr3z0r48").C("products")
+	collection := sess.DB("heroku_tr3z0r48").C("testdb")
 	//remove all before insert
 	collection.RemoveAll(nil)
 

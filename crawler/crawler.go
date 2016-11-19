@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/PuerkitoBio/goquery"
 	//"github.com/sonhnguyen/pcchecker/mlabConnector"
@@ -289,7 +290,8 @@ func ScrapeGamebank(res []PcItem) ([]PcItem, error) {
 	return res, nil
 }
 
-func ScrapeGearvn(res []PcItem) ([]PcItem, error) {
+func ScrapeGearvn(chProduct chan PcItem, gearvnFinished chan bool) {
+	productLinkCh := make(chan string, 10000)
 	ROOT_URL := "https://gearvn.com"
 
 	categoryLinks := []string{"http://gearvn.com/collections/ban-phim-co-gaming/",
@@ -300,79 +302,113 @@ func ScrapeGearvn(res []PcItem) ([]PcItem, error) {
 		"http://gearvn.com/collections/linh-kien-may-tinh/",
 		"http://gearvn.com/collections/laptop-gaming-1/",
 		"http://gearvn.com/collections/phu-kien/"}
-	productsLink := []string{}
-
-	//creating unsafe connection
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+		MaxIdleConnsPerHost: 50,
 	}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{
+		Transport: tr}
+	var linkGroup sync.WaitGroup
+	linkGroup.Add(len(categoryLinks))
 
 	for i := 0; i < len(categoryLinks); i++ {
-		doc, err := goquery.NewDocument(categoryLinks[i])
-		if err != nil {
-			return nil, err
-		}
-		for {
-			doc.Find("div.product-row > a").Each(func(i int, s *goquery.Selection) {
-				productLink, _ := s.Attr("href")
-				if productLink != "" {
-					productsLink = append(productsLink, ROOT_URL+productLink)
-				}
-			})
-			nextPage, _ := doc.Find("ul.pagination-list > li:last-child a").Attr("href")
-			if nextPage != "" && (ROOT_URL+nextPage) != doc.Url.String() {
-				web, err := client.Get(ROOT_URL + nextPage)
-				if err != nil {
-					return nil, err
-				}
+		categoryLink := categoryLinks[i]
 
-				doc, err = goquery.NewDocumentFromResponse(web)
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				break
+		go func() {
+			//creating unsafe connection
+			web, err := client.Get(categoryLink)
+			if err != nil {
+				fmt.Println("ERROR", err)
+				return
 			}
-		}
-	}
-	fmt.Println("gearvn reading %#v", len(categoryLinks))
 
-	//have productsLink contains all the products
-	for i := 0; i < len(productsLink); i++ {
-		web, err := client.Get(productsLink[i])
-		if err != nil {
-			return nil, err
-		}
-
-		doc, err := goquery.NewDocumentFromResponse(web)
-		if err == nil {
-			images := []string{}
-			category := doc.Find("#breadcrumb > div > div > span:nth-child(4) > a").Text()
-			title := doc.Find("h1.product_name").Text()
-			desc := doc.Find("div.tab-content").Text()
-			doc.Find("div.product_thumbnail img").Each(func(i int, s *goquery.Selection) {
-				src, exists := s.Attr("src")
-				if exists {
-					images = append(images, src)
-				}
-			})
-			priceString := doc.Find("span.product_sale_price").First().Text()
-			priceString = strings.Replace(priceString, ",", "", -1)
-			priceString = strings.Replace(priceString, "₫", "", -1)
-			price, err2 := strconv.Atoi(priceString)
-			if err2 != nil {
-				price = 0
+			doc, err := goquery.NewDocumentFromResponse(web)
+			if err != nil {
+				fmt.Println("ERROR", err)
+				return
 			}
-			status := doc.Find("div.product_parameters > p:nth-child(4) > span").Text()
-			origin := doc.Find("div.product_parameters > p:nth-child(3) > span").Text()
-			guarantee := doc.Find("div.product_parameters > p:nth-child(5) > span").Text()
-			item := PcItem{Title: title, Link: productsLink[i], Price: price, Status: status, Vendor: "gearvn", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
-			res = append(res, item)
-			fmt.Println("gearvn reading %#v / %#v", i, len(productsLink))
-		}
+			for true {
+				doc.Find("div.product-row > a").Each(func(i int, s *goquery.Selection) {
+
+					productLink, _ := s.Attr("href")
+					if productLink != "" {
+						productLinkCh <- productLink
+					}
+				})
+
+				nextPage, _ := doc.Find("ul.pagination-list > li:last-child a").Attr("href")
+				if nextPage != "" && (ROOT_URL+nextPage) != doc.Url.String() {
+					web, err := client.Get(ROOT_URL + nextPage)
+					if err != nil {
+						fmt.Println("ERROR", err)
+						return
+					}
+
+					doc, err = goquery.NewDocumentFromResponse(web)
+					if err != nil {
+						fmt.Println("ERROR", err)
+						return
+					}
+
+				} else {
+					linkGroup.Done()
+					return
+				}
+			}
+
+		}()
 	}
-	return res, nil
+	linkGroup.Wait()
+	close(productLinkCh)
+
+	var productGroup sync.WaitGroup
+	productGroup.Add(len(categoryLinks))
+
+	workerCount := len(categoryLinks)
+	for i := 0; i < workerCount; i++ {
+		go func(productLinkCh <-chan string) {
+			for productLink := range productLinkCh {
+				web, err := client.Get(ROOT_URL + productLink)
+				if err != nil {
+					fmt.Println("ERROR", err)
+
+					return
+				}
+
+				doc, err := goquery.NewDocumentFromResponse(web)
+				if err == nil {
+					images := []string{}
+					category := doc.Find("#breadcrumb > div > div > span:nth-child(4) > a").Text()
+					title := doc.Find("h1.product_name").Text()
+					desc := doc.Find("div.tab-content").Text()
+					doc.Find("div.product_thumbnail img").Each(func(i int, s *goquery.Selection) {
+						src, exists := s.Attr("src")
+						if exists {
+							images = append(images, src)
+						}
+					})
+					priceString := doc.Find("span.product_sale_price").First().Text()
+					priceString = strings.Replace(priceString, ",", "", -1)
+					priceString = strings.Replace(priceString, "₫", "", -1)
+					price, err2 := strconv.Atoi(priceString)
+					if err2 != nil {
+						price = 0
+					}
+					status := doc.Find("div.product_parameters > p:nth-child(4) > span").Text()
+					origin := doc.Find("div.product_parameters > p:nth-child(3) > span").Text()
+					guarantee := doc.Find("div.product_parameters > p:nth-child(5) > span").Text()
+					item := PcItem{Title: title, Link: ROOT_URL + productLink, Price: price, Status: status, Vendor: "gearvn", Category: category, Desc: desc, Image: images, Origin: origin, Guarantee: guarantee}
+					chProduct <- item
+				} else {
+					fmt.Println("ERROR", err)
+					return
+				}
+			}
+			productGroup.Done()
+		}(productLinkCh)
+	}
+	productGroup.Wait()
+	gearvnFinished <- true
 }
 
 func ScrapePCX(chProduct chan PcItem, pcxFinished chan bool) {
@@ -561,14 +597,14 @@ func Run() {
 	// fmt.Printf("done ScrapeHH", len(pcItems))
 
 	// Channels
-	chProduct := make(chan PcItem, 1000)
+	chProduct := make(chan PcItem, 10000)
 	azFinished := make(chan bool)
 	pcxFinished := make(chan bool)
+	gearvnFinished := make(chan bool)
 
-	go ScrapeAZ(chProduct, azFinished)
-	//go ScrapePCX(chProduct, pcxFinished)
-	// case vendor == "azaudio":
-	// 	go ScrapeAZ(chProduct, chFinished)
+	go ScrapeGearvn(chProduct, gearvnFinished)
+	// go ScrapeAZ(chProduct, azFinished)
+	// go ScrapePCX(chProduct, pcxFinished)
 	pcItems := []PcItem{}
 	const workerCount = 100
 	for i := 0; i < workerCount; i++ {
@@ -582,6 +618,8 @@ func Run() {
 					fmt.Println("done azaudio")
 				case <-pcxFinished:
 					fmt.Println("done pcx")
+				case <-gearvnFinished:
+					fmt.Println("done GEARVN")
 					//mlabConnector.InsertMlab(pcItems)
 				}
 			}
