@@ -9,7 +9,7 @@ This application supports the [Getting Started with Go on Heroku](https://devcen
 - POST /createBuild
   - params: Array of product ID
   
-- GET /getBuildById/:id
+- GET /getBuildById?id=123123
   - URL params: id
   
 - GET /build/:encodedURL
