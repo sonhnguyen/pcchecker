@@ -83,21 +83,27 @@ func CreateBuild(c *gin.Context) {
 func GetBuildById(c *gin.Context) {
 	buildId := c.Query("id")
 	var buildResult Build
-	buildCollection.FindId(bson.ObjectIdHex(buildId)).One(&buildResult)
-	var responseData BuildResponse
-	responseData.Id = buildResult.Id
-	responseData.DatetimeCreate = buildResult.DatetimeCreate
-	responseData.By = buildResult.By
-	responseData.EncodedURL = buildResult.EncodedURL
+	if !bson.IsObjectIdHex(buildId) {
+		c.JSON(400, gin.H{
+			"error":  responseService.ResponseError(400, errors.New("INVALID_PARAMS"), "Invalid Params"),
+			"result": nil})
+	} else {
+		buildCollection.FindId(bson.ObjectIdHex(buildId)).One(&buildResult)
+		var responseData BuildResponse
+		responseData.Id = buildResult.Id
+		responseData.DatetimeCreate = buildResult.DatetimeCreate
+		responseData.By = buildResult.By
+		responseData.EncodedURL = buildResult.EncodedURL
 
-	oids := make([]bson.ObjectId, len(buildResult.Detail))
-	for i := range buildResult.Detail {
-		oids[i] = bson.ObjectIdHex(buildResult.Detail[i])
+		oids := make([]bson.ObjectId, len(buildResult.Detail))
+		for i := range buildResult.Detail {
+			oids[i] = bson.ObjectIdHex(buildResult.Detail[i])
+		}
+		productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).All(&responseData.Detail)
+		c.JSON(200, gin.H{
+			"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
+			"result": responseData})
 	}
-	productCollection.Find(bson.M{"_id": bson.M{"$in": oids}}).All(&responseData.Detail)
-	c.JSON(200, gin.H{
-		"error":  responseService.ResponseError(200, errors.New("OK"), "OK"),
-		"result": responseData})
 }
 
 func GetBuildByEncodedURL(c *gin.Context) {

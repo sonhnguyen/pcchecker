@@ -28,6 +28,11 @@ This application supports the [Getting Started with Go on Heroku](https://devcen
 - GET /product/:id/
   - Param id: return product of that id
 
+- GET /autocomplete?querystring=gearvn&limit=10&skip=0
+  - URL params: querystring, limit, skip
+  - querystring will be used for searching title and vendor. limit, skip will be used for pagination.
+  - Performs search product by text. Each data has fields: id, price, title, vendor
+
 ## Running Locally
 
 Make sure you have [Go](http://golang.org/doc/install) and the [Heroku Toolbelt](https://toolbelt.heroku.com/) installed.
