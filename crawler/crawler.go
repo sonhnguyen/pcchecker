@@ -578,10 +578,9 @@ func ScrapeAZ(chProduct chan PcItem, azFinished chan bool) {
 	productGroup.Wait()
 	azFinished <- true
 }
-func CheckIsDoneAll(crawlerStatus map[string]bool, startTime Time) bool {
-	for _, k := range keys {
-		fmt.Println("Key:", k, "Value:", m[k])
-		if m[k] == false {
+func CheckIsDoneAll(crawlerStatus map[string]bool, startTime time.Time) bool {
+	for _, k := range crawlerStatus {
+		if k == false {
 			return false
 		}
 	}
