@@ -6,12 +6,17 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// PcItem asdklajl
+type PriceToday struct {
+	Datetime time.Time `json:"datetime" bson:"datetime"`
+	Price    int       `json:"price" bson:"price"`
+}
+
+// PcItem
 type PcItem struct {
 	Id        bson.ObjectId `json:"id" bson:"_id"`
 	Title     string        `json:"title" bson:"title"`
 	Link      string        `json:"link" bson:"link"`
-	Price     int           `json:"price" bson:"price"`
+	Price     PriceToday    `json:"price_today" bson:"price_today"`
 	Guarantee string        `json:"guarantee" bson:"guarantee"`
 	ShortDesc string        `json:"shortDesc" bson:"shortDesc"`
 	Desc      string        `json:"desc" bson:"desc"`
