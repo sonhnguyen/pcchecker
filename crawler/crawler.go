@@ -625,11 +625,11 @@ func Run() {
 	// crawlerStatus := map[string]bool{"gamebank": false, "azaudio": false, "pcx": false, "gearvn": false}
 	crawlerStatus := map[string]bool{"tandoanh": false}
 
-	// go ScrapeGearvn(chProduct, gearvnFinished)
-	// go ScrapeAZ(chProduct, azFinished)
-	// go ScrapePCX(chProduct, pcxFinished)
-	// go ScrapeGamebank(chProduct, gamebankFinished)
-	// go ScrapeHH(chProduct, huuhoangFinished)
+	go ScrapeGearvn(chProduct, gearvnFinished)
+	go ScrapeAZ(chProduct, azFinished)
+	go ScrapePCX(chProduct, pcxFinished)
+	go ScrapeGamebank(chProduct, gamebankFinished)
+	go ScrapeHH(chProduct, huuhoangFinished)
 	go ScrapeTanDoanhVer2(chProduct, tandoanhFinished)
 	pcItems := []PcItem{}
 
@@ -647,7 +647,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break
@@ -656,7 +656,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break
@@ -665,7 +665,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break
@@ -674,7 +674,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break
@@ -683,7 +683,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break
@@ -692,7 +692,7 @@ func Run() {
 					if CheckIsDoneAll(crawlerStatus, start) {
 						elapsed := time.Since(start)
 						fmt.Println("done everything %s", elapsed)
-						mlabConnector.InsertMlab(pcItems)
+						mlabConnector.InsertMlab(pcItems, "products")
 						break
 					}
 					break

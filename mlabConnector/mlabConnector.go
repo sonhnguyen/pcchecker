@@ -5,7 +5,6 @@ import (
 	"os"
 
 	. "github.com/sonhnguyen/pcchecker/model"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -31,7 +30,7 @@ func GetMLab() ([]PcItem, error) {
 	return results, err
 }
 
-func InsertMlab(items []PcItem) {
+func InsertMlab(items []PcItem, string dbname) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		fmt.Println("no connection string provided")
@@ -45,7 +44,7 @@ func InsertMlab(items []PcItem) {
 	}
 	defer sess.Close()
 	sess.SetSafe(&mgo.Safe{})
-	collection := sess.DB("heroku_tr3z0r48").C("testdb")
+	collection := sess.DB("heroku_tr3z0r48").C(dbname)
 	//remove all before insert
 	collection.RemoveAll(nil)
 
