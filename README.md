@@ -4,6 +4,34 @@
 A barebones Go app, which can easily be deployed to Heroku.
 
 This application supports the [Getting Started with Go on Heroku](https://devcenter.heroku.com/articles/getting-started-with-go) article - check it out.
+## API DOCS FOR OUR FRONTEND MASTERPIECE
+
+- POST /createBuild
+  - params: Array of product ID
+  
+- GET /getBuildById?id=123123
+  - URL params: id
+  
+- GET /build/:encodedURL
+  - URL params: encodedURL
+  
+- GET /getBuildRecent?limit=10
+  - URL params: limit, if not input default is 10
+
+- GET /getProducts/:category
+  - returns all product of that category
+
+- GET /getProducts?query=asdasd
+  - URL params: query
+  - Performs search product by text, return a list with relevant sorted
+
+- GET /product/:id/
+  - Param id: return product of that id
+
+- GET /autocomplete?querystring=gearvn&limit=10&skip=0
+  - URL params: querystring, limit, skip
+  - querystring will be used for searching title and vendor. limit, skip will be used for pagination.
+  - Performs search product by text. Each data has fields: id, price, title, vendor
 
 ## Running Locally
 
