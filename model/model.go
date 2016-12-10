@@ -1,13 +1,22 @@
 package PcItemModel
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"time"
 
-// PcItem asdklajl
+	"gopkg.in/mgo.v2/bson"
+)
+
+type PriceToday struct {
+	Datetime time.Time `json:"datetime" bson:"datetime"`
+	Price    int       `json:"price" bson:"price"`
+}
+
+// PcItem
 type PcItem struct {
 	Id        bson.ObjectId `json:"id" bson:"_id"`
 	Title     string        `json:"title" bson:"title"`
 	Link      string        `json:"link" bson:"link"`
-	Price     int           `json:"price" bson:"price"`
+	Price     PriceToday    `json:"price_today" bson:"price_today"`
 	Guarantee string        `json:"guarantee" bson:"guarantee"`
 	ShortDesc string        `json:"shortDesc" bson:"shortDesc"`
 	Desc      string        `json:"desc" bson:"desc"`
@@ -20,7 +29,9 @@ type PcItem struct {
 }
 
 type Build struct {
-	Id             bson.ObjectId       `json:"id" bson:"_id"`
-	DatetimeCreate bson.MongoTimestamp `json:"datetimeCreate" bson:"datetimeCreate"`
-	By             bson.ObjectId       `json:"by" bson:"by"`
+	Id             bson.ObjectId  `json:"id" bson:"_id"`
+	DatetimeCreate time.Time      `json:"datetimeCreate" bson:"datetimeCreate"`
+	By             *bson.ObjectId `json:"by,omitempty" bson:"by,omitempty"`
+	EncodedURL     string         `json:"encodedurl" bson:"encodedurl"`
+	Detail         []string       `json:"detail" bson:"detail"`
 }
