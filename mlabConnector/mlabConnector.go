@@ -5,6 +5,7 @@ import (
 	"os"
 
 	. "github.com/sonhnguyen/pcchecker/model"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -30,7 +31,7 @@ func GetMLab() ([]PcItem, error) {
 	return results, err
 }
 
-func InsertMlab(items []PcItem, string dbname) {
+func InsertMlab(items []PcItem, dbname string) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		fmt.Println("no connection string provided")
