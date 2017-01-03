@@ -44,9 +44,6 @@ func main() {
 		c.JSON(200, nil)
 		go crawler.Run()
 	})
-	router.GET("/wakemydyno.txt", func(c *gin.Context) {
-		c.JSON(200, "hello")
-	})
 
 	productService.RegisterAPI(router)
 	buildService.RegisterAPI(router)
